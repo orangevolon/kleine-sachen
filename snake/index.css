@@ -1,4 +1,20 @@
+* {
+  box-sizing: border-box;
+}
+
 html,
 body {
   font-family: sans-serif;
+}
+
+.cells-container {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-size), 1fr);
+  grid-template-rows: repeat(var(--grid-size), 1fr);
+  gap: 2px;
+}
+
+.cell {
+  border: 1px solid gray;
+  aspect-ratio: 1/1;
 }
