@@ -2,6 +2,7 @@ const MIN_BOARD_WIDTH = 2;
 const MIN_BOARD_HEIGHT = 2;
 const DOT_QUARTERS_PER_CELL = 4;
 const DOT_SIZE_PX = 8;
+const EDGE_THICKNESS = 6;
 
 function appendElement(type, parent, { classes, id, cssVars } = {}) {
   const element = document.createElement(type);
@@ -33,36 +34,67 @@ function createBoard(container, boardSize) {
       throw new Error(`Grid height must be at least ${MIN_BOARD_HEIGHT}`);
   }
 
-  function appendCellDots(cell, rowIdx, colIdx) {
-    for (let dotIdx = 0; dotIdx < DOT_QUARTERS_PER_CELL; dotIdx++) {
+  function appendCellEdges(cell, rowIdx, colIdx) {
+    const cssVars = { "--edge-thickness": `${EDGE_THICKNESS}px` };
+
+    const isLastCol = colIdx === boardSize.width - 1;
+    const isLastRow = rowIdx === boardSize.height - 1;
+
+    appendElement("div", cell, {
+      classes: ["cell-edge", "align-top"],
+      cssVars,
+    });
+
+    appendElement("div", cell, {
+      classes: ["cell-edge", "align-left"],
+      cssVars,
+    });
+
+    if (isLastRow) {
       appendElement("div", cell, {
-        classes: ["cell-dot"],
-        cssVars: { "--dot-size": `${DOT_SIZE_PX}px` },
+        classes: ["cell-edge", "align-bottom"],
+        cssVars,
       });
+    }
 
-      const isLastCol = colIdx === boardSize.width - 1;
-      const isLastRow = rowIdx === boardSize.height - 1;
+    if (isLastCol) {
+      appendElement("div", cell, {
+        classes: ["cell-edge", "align-right"],
+        cssVars,
+      });
+    }
+  }
 
-      if (isLastCol && isLastRow) {
-        appendElement("div", cell, {
-          classes: ["cell-dot", "align-right", "align-bottom"],
-          cssVars: { "--dot-size": `${DOT_SIZE_PX}px` },
-        });
-      }
+  function appendCellDots(cell, rowIdx, colIdx) {
+    const cssVars = { "--dot-size": `${DOT_SIZE_PX}px` };
 
-      if (isLastCol) {
-        appendElement("div", cell, {
-          classes: ["cell-dot", "align-right"],
-          cssVars: { "--dot-size": `${DOT_SIZE_PX}px` },
-        });
-      }
+    appendElement("div", cell, {
+      classes: ["cell-dot"],
+      cssVars,
+    });
 
-      if (isLastRow) {
-        appendElement("div", cell, {
-          classes: ["cell-dot", "align-bottom"],
-          cssVars: { "--dot-size": `${DOT_SIZE_PX}px` },
-        });
-      }
+    const isLastCol = colIdx === boardSize.width - 1;
+    const isLastRow = rowIdx === boardSize.height - 1;
+
+    if (isLastCol && isLastRow) {
+      appendElement("div", cell, {
+        classes: ["cell-dot", "align-right", "align-bottom"],
+        cssVars,
+      });
+    }
+
+    if (isLastCol) {
+      appendElement("div", cell, {
+        classes: ["cell-dot", "align-right"],
+        cssVars,
+      });
+    }
+
+    if (isLastRow) {
+      appendElement("div", cell, {
+        classes: ["cell-dot", "align-bottom"],
+        cssVars,
+      });
     }
   }
 
@@ -78,6 +110,7 @@ function createBoard(container, boardSize) {
       });
 
       appendCellDots(cellSpacer, rowIdx, colIdx);
+      appendCellEdges(cellSpacer, rowIdx, colIdx);
     }
   }
 

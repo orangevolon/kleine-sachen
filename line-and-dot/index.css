@@ -45,3 +45,44 @@ body {
   top: auto;
   bottom: calc(-1 * var(--dot-size) / 2);
 }
+
+.cell-edge {
+  background-color: transparent;
+  transition: background-color 100ms ease;
+  cursor: pointer;
+  position: absolute;
+}
+
+.cell-edge:hover {
+  background-color: maroon;
+}
+
+.cell-edge.align-left,
+.cell-edge.align-right {
+  width: var(--edge-thickness);
+  height: 100%;
+}
+
+.cell-edge.align-top,
+.cell-edge.align-bottom {
+  width: 100%;
+  height: var(--edge-thickness);
+}
+
+.cell-edge.align-left {
+  left: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-top {
+  top: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-right {
+  left: auto;
+  right: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-bottom {
+  top: auto;
+  bottom: calc(-1 * var(--edge-thickness) / 2);
+}
