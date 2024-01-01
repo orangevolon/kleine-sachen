@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start:snake": "live-server snake"
+    "start:snake": "live-server snake",
+    "start:line-and-dot": "live-server line-and-dot"
   },
   "keywords": [],
   "author": "",
