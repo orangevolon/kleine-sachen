@@ -53,6 +53,10 @@ body {
   position: absolute;
 }
 
+.cell-edge.selected {
+  background-color: maroon;
+}
+
 .cell-edge:hover {
   background-color: maroon;
 }
