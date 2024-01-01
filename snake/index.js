@@ -1,6 +1,13 @@
 const GRID_SIDE = 20;
 const SPEED_MOVE_PER_SECOND = 2;
 
+const oppositeDirections = {
+  up: "down",
+  right: "left",
+  down: "up",
+  left: "right",
+};
+
 const keyDirMap = {
   ArrowUp: "up",
   ArrowDown: "down",
@@ -32,33 +39,70 @@ function createSnake({
   initialDirection = "right",
   onProgress,
   onFail,
+  onFoodSpawn,
 }) {
   let direction = initialDirection;
+  let foodPosition;
+
   const initialHeadIdx = Math.floor(gridSize ** 2 / 2);
   const positions = [initialHeadIdx];
 
+  // Private methods
+  function spawnNewFood() {
+    const oldPosition = foodPosition;
+    const maxPosition = gridSize ** 2 - 1;
+
+    do foodPosition = Math.round(Math.random() * maxPosition);
+    while (isOnSnakeBody(foodPosition));
+
+    onFoodSpawn?.({
+      position: foodPosition,
+      oldPosition,
+    });
+  }
+
+  function isOnSnakeBody(position) {
+    return positions.includes(position);
+  }
+
+  function isOnEdge(position) {
+    if (position % gridSize === gridSize - 1) return "right-edge";
+    if (position % gridSize === 0) return "left-edge";
+    if (position < gridSize) return "top-edge";
+    if (position > (gridSize - 1) * gridSize) return "bottom-edge";
+    return false;
+  }
+
   function getNext(head, direction) {
     switch (direction) {
-      case "right": {
-        if (head % gridSize === gridSize - 1) throw head;
+      case "right":
         return head + 1;
-      }
-      case "left": {
-        if (head % gridSize === 0) throw head;
+      case "left":
         return head - 1;
-      }
-      case "up": {
-        if (head < gridSize) throw head;
+      case "up":
         return head - gridSize;
-      }
-      case "down": {
-        if (head > (gridSize - 1) * gridSize) throw head;
+      case "down":
         return head + gridSize;
-      }
     }
   }
 
+  function getNextIfPossible(head, direction) {
+    const next = getNext(head, direction);
+
+    if (isOnSnakeBody(next)) throw head;
+
+    const edge = isOnEdge(head);
+    if (direction === "right" && edge === "right-edge") throw head;
+    if (direction === "left" && edge === "left-edge") throw head;
+    if (direction === "top" && edge === "top-edge") throw head;
+    if (direction === "bottom" && edge === "bottom-edge") throw head;
+
+    return next;
+  }
+
+  // Public methods
   function setDirection(newDirection) {
+    if (newDirection === oppositeDirections[direction]) return;
     direction = newDirection;
   }
 
@@ -66,12 +110,22 @@ function createSnake({
     const head = positions[positions.length - 1];
 
     try {
-      const added = getNext(head, direction);
-      positions.push(added);
+      const nextHead = getNextIfPossible(head, direction);
+      positions.push(nextHead);
+
+      if (nextHead === foodPosition) {
+        spawnNewFood();
+
+        return {
+          added: [nextHead],
+          removed: [],
+        };
+      }
+
       const removed = positions.shift();
 
       return {
-        added: [added],
+        added: [nextHead],
         removed: [removed],
       };
     } catch (hit) {
@@ -79,23 +133,26 @@ function createSnake({
     }
   }
 
-  // run the snake
-  const intervalTimeMs = 1000 / speed;
-  const interval = setInterval(() => {
-    const result = progress();
+  function start() {
+    const intervalTimeMs = 1000 / speed;
+    const interval = setInterval(() => {
+      const result = progress();
 
-    if (result.hit) {
-      clearInterval(interval);
-      onFail?.(result);
-    } else {
-      onProgress(result);
-    }
-  }, intervalTimeMs);
+      if (result.hit) {
+        clearInterval(interval);
+        onFail?.(result);
+      } else {
+        onProgress(result);
+      }
+    }, intervalTimeMs);
+
+    spawnNewFood();
+  }
 
   return {
-    setDirection,
-    progress,
     positions,
+    setDirection,
+    start,
   };
 }
 
@@ -119,6 +176,18 @@ function createFailHandler() {
   };
 }
 
+function createFoodSpawnHandler(cellContainer) {
+  return function handleSpawnFood({ position, oldPosition }) {
+    if (oldPosition) {
+      const oldCell = cellContainer.querySelector(`#cell-${oldPosition}`);
+      oldCell.classList.remove("food");
+    }
+
+    const newCell = cellContainer.querySelector(`#cell-${position}`);
+    newCell.classList.add("food");
+  };
+}
+
 function runGame() {
   const app = document.getElementById("app");
   const cells = createCells(GRID_SIDE);
@@ -129,6 +198,7 @@ function runGame() {
     speed: SPEED_MOVE_PER_SECOND,
     onProgress: createProgressHandler(cells),
     onFail: createFailHandler(),
+    onFoodSpawn: createFoodSpawnHandler(cells),
   });
 
   document.addEventListener("keydown", (event) => {
@@ -136,7 +206,7 @@ function runGame() {
     if (direction) snake.setDirection(direction);
   });
 
-  return { snake, cells };
+  snake.start();
 }
 
 runGame();

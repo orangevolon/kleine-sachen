@@ -22,3 +22,7 @@ body {
 .snake-cell {
   background-color: green;
 }
+
+.food {
+    background-color: darkred;
+}
