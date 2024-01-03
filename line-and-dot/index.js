@@ -43,8 +43,8 @@ function createBoard(container, options) {
   function appendCellEdges(cell, rowIdx, colIdx) {
     const cssVars = { "--edge-thickness": `${EDGE_THICKNESS}px` };
 
-    const isLastCol = colIdx === options.width - 1;
-    const isLastRow = rowIdx === options.height - 1;
+    const isLastCol = colIdx === options.width - 2;
+    const isLastRow = rowIdx === options.height - 2;
 
     function createClickHandler(side) {
       function getLinePos() {
@@ -116,8 +116,8 @@ function createBoard(container, options) {
       cssVars,
     });
 
-    const isLastCol = colIdx === options.width - 1;
-    const isLastRow = rowIdx === options.height - 1;
+    const isLastCol = colIdx === options.width - 2;
+    const isLastRow = rowIdx === options.height - 2;
 
     if (isLastCol && isLastRow) {
       appendElement("div", cell, {
@@ -142,7 +142,7 @@ function createBoard(container, options) {
   }
 
   function appendCells(row, rowIdx) {
-    for (let colIdx = 0; colIdx < options.width; colIdx++) {
+    for (let colIdx = 0; colIdx < options.width - 1; colIdx++) {
       const cell = appendElement("td", row, {
         classes: ["cell"],
         id: `cell-${rowIdx}-${colIdx}`,
@@ -158,7 +158,7 @@ function createBoard(container, options) {
   }
 
   function appendRows(container) {
-    for (let rowIdx = 0; rowIdx < options.height; rowIdx++) {
+    for (let rowIdx = 0; rowIdx < options.height - 1; rowIdx++) {
       const row = appendElement("tr", container, {
         classes: ["board-row"],
       });
@@ -167,7 +167,7 @@ function createBoard(container, options) {
     }
   }
 
-  function createBoard(container) {
+  function insertBoard(container) {
     container.innerHTML = "";
 
     const board = appendElement("table", container, {
@@ -179,19 +179,83 @@ function createBoard(container, options) {
   }
 
   validateBoardSize(options);
-  createBoard(container);
+  insertBoard(container);
+}
+
+function createGame(options) {
+  const graph = new Map();
+
+  function addNodes() {
+    for (let rowIdx = 0; rowIdx < options.height; rowIdx++) {
+      for (let colIdx = 0; colIdx < options.width; colIdx++) {
+        const nodeIdx = rowIdx * options.width + colIdx;
+        graph.set(nodeIdx, {
+          edges: [],
+        });
+      }
+    }
+  }
+
+  function checkForCycle({ startIdx, endIdx }) {
+    const visitedNodes = new Set();
+
+    // DFS for finding cycle
+    function traverse(nodeIdx) {
+      // Last edge
+      if (!nodeIdx) return false;
+
+      // Existing cycle
+      if (visitedNodes.has(nodeIdx)) return false;
+
+      // New cycle
+      if (nodeIdx === startIdx) return true;
+
+      const node = graph.get(nodeIdx);
+      visitedNodes.add(nodeIdx);
+      for (const edge of node.edges) {
+        const doesEdgeLeadToCycle = traverse(edge);
+        if (doesEdgeLeadToCycle) return true;
+      }
+
+      return false;
+    }
+
+    return traverse(endIdx);
+  }
+
+  function selectEdge({ start, end }) {
+    const startIdx = start.y * options.width + start.x;
+    const endIdx = end.y * options.width + end.x;
+
+    const hasCycle = checkForCycle({ startIdx, endIdx });
+    if (hasCycle) {
+      console.log("Cycle detected!");
+    }
+
+    graph.get(startIdx).edges.push(endIdx);
+    graph.get(endIdx).edges.push(startIdx);
+  }
+
+  addNodes();
+
+  return {
+    selectEdge,
+  };
 }
 
 (function run() {
+  const width = 20;
+  const height = 10;
   const app = document.getElementById("app");
 
-  function onLineSelect({ start, end }) {
-    console.log("Line selected", { start, end });
-  }
+  const { selectEdge } = createGame({
+    width,
+    height,
+  });
 
   createBoard(app, {
-    width: 20,
-    height: 10,
-    onLineSelect,
+    width,
+    height,
+    onLineSelect: selectEdge,
   });
 })();
