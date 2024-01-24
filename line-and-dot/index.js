@@ -1,5 +1,5 @@
-const MIN_BOARD_WIDTH = 2;
-const MIN_BOARD_HEIGHT = 2;
+const MIN_BOARD_WIDTH = 1;
+const MIN_BOARD_HEIGHT = 1;
 const DOT_QUARTERS_PER_CELL = 4;
 const DOT_SIZE_PX = 8;
 const EDGE_THICKNESS = 6;
@@ -40,42 +40,15 @@ function createBoard(container, options) {
       throw new Error(`Grid height must be at least ${MIN_BOARD_HEIGHT}`);
   }
 
-  function appendCellEdges(cell, rowIdx, colIdx) {
+  function appendCellEdges(cell, row, col) {
     const cssVars = { "--edge-thickness": `${EDGE_THICKNESS}px` };
 
-    const isLastCol = colIdx === options.width - 2;
-    const isLastRow = rowIdx === options.height - 2;
+    const isLastCol = col === options.cols - 1;
+    const isLastRow = row === options.rows - 1;
 
-    function createClickHandler(side) {
-      function getLinePos() {
-        switch (side) {
-          case "left":
-            return {
-              start: { x: colIdx, y: rowIdx },
-              end: { x: colIdx, y: rowIdx + 1 },
-            };
-          case "right":
-            return {
-              start: { x: colIdx + 1, y: rowIdx },
-              end: { x: colIdx + 1, y: rowIdx + 1 },
-            };
-          case "top":
-            return {
-              start: { x: colIdx, y: rowIdx },
-              end: { x: colIdx + 1, y: rowIdx },
-            };
-          case "bottom":
-            return {
-              start: { x: colIdx, y: rowIdx + 1 },
-              end: { x: colIdx + 1, y: rowIdx + 1 },
-            };
-        }
-      }
-
+    function createClickHandler(edge) {
       return function handleClick(event) {
-        const linePos = getLinePos();
-        options?.onLineSelect?.(linePos);
-        event.target.classList.add("selected");
+        options?.onEdgeSelect?.({ col, row, edge }, event);
       };
     }
 
@@ -116,8 +89,8 @@ function createBoard(container, options) {
       cssVars,
     });
 
-    const isLastCol = colIdx === options.width - 2;
-    const isLastRow = rowIdx === options.height - 2;
+    const isLastCol = colIdx === options.cols - 1;
+    const isLastRow = rowIdx === options.rows - 1;
 
     if (isLastCol && isLastRow) {
       appendElement("div", cell, {
@@ -142,7 +115,7 @@ function createBoard(container, options) {
   }
 
   function appendCells(row, rowIdx) {
-    for (let colIdx = 0; colIdx < options.width - 1; colIdx++) {
+    for (let colIdx = 0; colIdx < options.cols; colIdx++) {
       const cell = appendElement("td", row, {
         classes: ["cell"],
         id: `cell-${rowIdx}-${colIdx}`,
@@ -158,7 +131,7 @@ function createBoard(container, options) {
   }
 
   function appendRows(container) {
-    for (let rowIdx = 0; rowIdx < options.height - 1; rowIdx++) {
+    for (let rowIdx = 0; rowIdx < options.rows; rowIdx++) {
       const row = appendElement("tr", container, {
         classes: ["board-row"],
       });
@@ -178,84 +151,46 @@ function createBoard(container, options) {
     appendRows(board);
   }
 
+  function toggleEdge({ row, col, edge }) {
+    const cellElem = document.getElementById(`cell-${row}-${col}`);
+    if (!cellElem) throw new Error("Invalid row and col");
+
+    const edgeElem = cellElem.querySelector(`.cell-edge.align-${edge}`);
+    if (!edgeElem) throw new Error("Invalid edge");
+
+    edgeElem.classList.toggle("selected");
+  }
+
+  function toggleCell({ row, col }) {
+    const cellElem = document.getElementById(`cell-${row}-${col}`);
+    if (!cellElem) throw new Error("Invalid row and col");
+
+    cellElem.classList.toggle("selected");
+  }
+
   validateBoardSize(options);
   insertBoard(container);
-}
-
-function createGame(options) {
-  const graph = new Map();
-
-  function addNodes() {
-    for (let rowIdx = 0; rowIdx < options.height; rowIdx++) {
-      for (let colIdx = 0; colIdx < options.width; colIdx++) {
-        const nodeIdx = rowIdx * options.width + colIdx;
-        graph.set(nodeIdx, {
-          edges: [],
-        });
-      }
-    }
-  }
-
-  function checkForCycle({ startIdx, endIdx }) {
-    const visitedNodes = new Set();
-
-    // DFS for finding cycle
-    function traverse(nodeIdx) {
-      // Last edge
-      if (!nodeIdx) return false;
-
-      // Existing cycle
-      if (visitedNodes.has(nodeIdx)) return false;
-
-      // New cycle
-      if (nodeIdx === startIdx) return true;
-
-      const node = graph.get(nodeIdx);
-      visitedNodes.add(nodeIdx);
-      for (const edge of node.edges) {
-        const doesEdgeLeadToCycle = traverse(edge);
-        if (doesEdgeLeadToCycle) return true;
-      }
-
-      return false;
-    }
-
-    return traverse(endIdx);
-  }
-
-  function selectEdge({ start, end }) {
-    const startIdx = start.y * options.width + start.x;
-    const endIdx = end.y * options.width + end.x;
-
-    const hasCycle = checkForCycle({ startIdx, endIdx });
-    if (hasCycle) {
-      console.log("Cycle detected!");
-    }
-
-    graph.get(startIdx).edges.push(endIdx);
-    graph.get(endIdx).edges.push(startIdx);
-  }
-
-  addNodes();
 
   return {
-    selectEdge,
+    toggleEdge,
+    toggleCell,
   };
 }
 
+function createGame(options) {
+  // TODO: implement the game
+}
+
 (function run() {
-  const width = 20;
-  const height = 10;
+  const rows = 5;
+  const cols = 5;
   const app = document.getElementById("app");
 
-  const { selectEdge } = createGame({
-    width,
-    height,
-  });
-
-  createBoard(app, {
-    width,
-    height,
-    onLineSelect: selectEdge,
+  const { toggleEdge } = createBoard(app, {
+    cols,
+    rows,
+    onEdgeSelect: ({ row, col, edge }) => {
+      toggleEdge({ row, col, edge });
+    },
   });
 })();

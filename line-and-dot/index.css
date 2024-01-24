@@ -19,6 +19,18 @@ body {
   padding: 0;
 }
 
+.cell.selected {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(128, 0, 0, 0.35) 0,
+    rgba(128, 0, 0, 0.35) 1%,
+    transparent 1%,
+    transparent 4%,
+    rgba(128, 0, 0, 0.35) 4%,
+    rgba(128, 0, 0, 0.35) 5%
+  )
+}
+
 .cell-spacer {
   width: 100%;
   aspect-ratio: 1/1;
@@ -63,7 +75,7 @@ body {
 
 .cell-edge.align-left,
 .cell-edge.align-right {
-  width: var(--edge-thickness);
+  border-left-width: var(--edge-thickness);
   height: 100%;
 }
 
