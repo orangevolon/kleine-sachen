@@ -1,0 +1,104 @@
+html,
+body {
+  padding: 0.5em;
+  margin: 0;
+  font-family: sans-serif;
+  font-size: 14px;
+}
+
+.board {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.board-row {
+}
+
+.cell {
+  border: 1px dotted #ccc;
+  padding: 0;
+}
+
+.cell.selected {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(128, 0, 0, 0.35) 0,
+    rgba(128, 0, 0, 0.35) 1%,
+    transparent 1%,
+    transparent 4%,
+    rgba(128, 0, 0, 0.35) 4%,
+    rgba(128, 0, 0, 0.35) 5%
+  )
+}
+
+.cell-spacer {
+  width: 100%;
+  aspect-ratio: 1/1;
+  position: relative;
+}
+
+.cell-dot {
+  background-color: #111;
+  width: var(--dot-size);
+  left: calc(-1 * var(--dot-size) / 2);
+  top: calc(-1 * var(--dot-size) / 2);
+  aspect-ratio: 1 / 1;
+  position: absolute;
+  border-radius: 100%;
+  z-index: 1;
+}
+
+.cell-dot.align-right {
+  left: auto;
+  right: calc(-1 * var(--dot-size) / 2);
+}
+
+.cell-dot.align-bottom {
+  top: auto;
+  bottom: calc(-1 * var(--dot-size) / 2);
+}
+
+.cell-edge {
+  background-color: transparent;
+  transition: background-color 100ms ease;
+  cursor: pointer;
+  position: absolute;
+}
+
+.cell-edge.selected {
+  background-color: maroon;
+}
+
+.cell-edge:hover {
+  background-color: maroon;
+}
+
+.cell-edge.align-left,
+.cell-edge.align-right {
+  width: var(--edge-thickness);
+  height: 100%;
+}
+
+.cell-edge.align-top,
+.cell-edge.align-bottom {
+  width: 100%;
+  height: var(--edge-thickness);
+}
+
+.cell-edge.align-left {
+  left: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-top {
+  top: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-right {
+  left: auto;
+  right: calc(-1 * var(--edge-thickness) / 2);
+}
+
+.cell-edge.align-bottom {
+  top: auto;
+  bottom: calc(-1 * var(--edge-thickness) / 2);
+}
