@@ -75,7 +75,7 @@ body {
 
 .cell-edge.align-left,
 .cell-edge.align-right {
-  border-left-width: var(--edge-thickness);
+  width: var(--edge-thickness);
   height: 100%;
 }
 

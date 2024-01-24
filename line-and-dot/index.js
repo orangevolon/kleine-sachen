@@ -31,15 +31,15 @@ function appendElement(type, parent, { classes, id, cssVars, onClick } = {}) {
   return element;
 }
 
+function validateBoardSize({ rows, cols }) {
+  if (cols < MIN_BOARD_WIDTH)
+    throw new Error(`Grid width must be at least ${MIN_BOARD_WIDTH}`);
+
+  if (rows < MIN_BOARD_HEIGHT)
+    throw new Error(`Grid height must be at least ${MIN_BOARD_HEIGHT}`);
+}
+
 function createBoard(container, options) {
-  function validateBoardSize(boardSize) {
-    if (boardSize?.width < MIN_BOARD_WIDTH)
-      throw new Error(`Grid width must be at least ${MIN_BOARD_WIDTH}`);
-
-    if (boardSize?.height < MIN_BOARD_HEIGHT)
-      throw new Error(`Grid height must be at least ${MIN_BOARD_HEIGHT}`);
-  }
-
   function appendCellEdges(cell, row, col) {
     const cssVars = { "--edge-thickness": `${EDGE_THICKNESS}px` };
 
@@ -178,7 +178,109 @@ function createBoard(container, options) {
 }
 
 function createGame(options) {
-  // TODO: implement the game
+  const adjList = new Map();
+
+  function getCellIdx({ col, row }) {
+    // cells outside of the range are all -1
+    if (col < 0 || col >= options.cols) return -1;
+    if (row < 0 || row >= options.rows) return -2;
+
+    return row * options.cols + col;
+  }
+
+  function getCellPos(cellIdx) {
+    const row = Math.floor(cellIdx / options.cols);
+    const col = cellIdx % options.cols;
+    return { row, col };
+  }
+
+  function initAdjList() {
+    for (let row = 0; row < options.rows; row++) {
+      for (let col = 0; col < options.cols; col++) {
+        const cellIdx = getCellIdx({ row, col });
+
+        adjList.set(
+          cellIdx,
+          new Set([
+            getAdjCellIdx({ row, col }, "top"),
+            getAdjCellIdx({ row, col }, "right"),
+            getAdjCellIdx({ row, col }, "bottom"),
+            getAdjCellIdx({ row, col }, "left"),
+          ])
+        );
+      }
+    }
+  }
+
+  function getAdjCellIdx({ col, row }, side) {
+    switch (side) {
+      case "top":
+        return getCellIdx({ row: row - 1, col });
+      case "right":
+        return getCellIdx({ row, col: col + 1 });
+      case "bottom":
+        return getCellIdx({ row: row + 1, col });
+      case "left":
+        return getCellIdx({ row, col: col - 1 });
+    }
+  }
+
+  function closeFromCell(cellIdx) {
+    const visited = new Set();
+
+    function dfs(cellIdx) {
+      if (visited.has(cellIdx)) return true;
+
+      visited.add(cellIdx);
+      const adjs = adjList.get(cellIdx);
+      if (adjs.size === 0) return true;
+      if (adjs.has(-1)) return false;
+      if (adjs.has(-2)) return false;
+
+      for (const adj of adjs) {
+        const canClose = dfs(adj);
+        if (!canClose) return false;
+      }
+
+      return true;
+    }
+
+    const canClose = dfs(cellIdx);
+    if (!canClose) return [];
+
+    return visited;
+  }
+
+  function selectEdge({ col, row, edge }) {
+    const cellIdx = getCellIdx({ col, row });
+    const adjCellIdx = getAdjCellIdx({ col, row }, edge);
+
+    const closedCells = [];
+    if (cellIdx > 0) {
+      adjList.get(cellIdx).delete(adjCellIdx);
+
+      const cells = closeFromCell(cellIdx);
+      for (const cellIdx of cells) {
+        closedCells.push(getCellPos(cellIdx));
+      }
+    }
+
+    if (adjCellIdx > 0) {
+      adjList.get(adjCellIdx).delete(cellIdx);
+
+      const cells = closeFromCell(adjCellIdx);
+      for (const cellIdx of cells) {
+        closedCells.push(getCellPos(cellIdx));
+      }
+    }
+
+    return closedCells;
+  }
+
+  validateBoardSize(options);
+  initAdjList(options);
+
+  return { selectEdge };
 }
 
 (function run() {
@@ -186,11 +288,17 @@ function createGame(options) {
   const cols = 5;
   const app = document.getElementById("app");
 
-  const { toggleEdge } = createBoard(app, {
+  const { selectEdge } = createGame({ cols, rows });
+  const { toggleEdge, toggleCell } = createBoard(app, {
     cols,
     rows,
-    onEdgeSelect: ({ row, col, edge }) => {
-      toggleEdge({ row, col, edge });
+    onEdgeSelect: (cellEdge) => {
+      const closedCells = selectEdge(cellEdge);
+      toggleEdge(cellEdge);
+
+      for (const closedCell of closedCells) {
+        toggleCell(closedCell);
+      }
     },
   });
 })();
