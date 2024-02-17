@@ -60,7 +60,7 @@ button:hover {
 }
 
 .chat-entry {
-    margin-bottom: 0.8em;
+  margin-bottom: 0.8em;
 }
 
 .chat-entry.send strong {
@@ -69,6 +69,11 @@ button:hover {
 
 .chat-entry.receive strong {
   color: lightgreen;
+}
+
+.chat-entry.transient {
+  color: #888;
+  font-style: italic;
 }
 
 .chat-area #input-form {

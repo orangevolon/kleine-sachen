@@ -3,23 +3,60 @@ function createChatForm(connection) {
   const inputText = document.getElementById("input-text");
   const responseText = document.getElementById("response-text");
 
-  function addChatEntry(sender, message, direction) {
+  function removeTransients() {
+    const transients = responseText.querySelectorAll(".transient");
+    for (const transient of transients) transient.remove();
+  }
+
+  function addChatEntry({ text, sender, direction, transient }) {
     const entry = document.createElement("li");
-    entry.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    entry.innerHTML = `<strong>${sender}:</strong> ${text}`;
     entry.classList.add("chat-entry");
     entry.classList.add(direction);
 
+    if (transient) {
+      entry.classList.add("transient");
+    }
+
+    removeTransients();
     responseText.appendChild(entry);
   }
 
   function sendMessage() {
-    const message = inputText.value;
-    addChatEntry("Me", message, "send");
-    connection.send(message);
+    const text = inputText.value;
+
+    addChatEntry({
+      sender: "Me",
+      text,
+      direction: "send",
+    });
+
+    const message = {
+      type: "message",
+      sender: "Me",
+      data: text,
+      timestamp: Date.now(),
+    };
+    connection.sendMessage(message);
   }
 
   function handleReceive(message) {
-    addChatEntry("Bot", message, "receive");
+    switch (message.type) {
+      case "message":
+        return addChatEntry({
+          sender: message.sender,
+          text: message.data,
+          direction: "receive",
+          transient: false,
+        });
+      case "typing":
+        return addChatEntry({
+          sender: message.sender,
+          text: "Typing...",
+          direction: "receive",
+          transient: true,
+        });
+    }
   }
 
   function handleSubmit(event) {
@@ -66,7 +103,12 @@ function createConnection(endpoint) {
   }
 
   function handleMessage(event) {
-    messageCallback?.(event.data);
+    try {
+      const decodedMessage = JSON.parse(event.data);
+      messageCallback?.(decodedMessage);
+    } catch (error) {
+      console.error("Message format is invalid");
+    }
   }
 
   ws.addEventListener("open", handleOpen);
@@ -83,15 +125,15 @@ function createConnection(endpoint) {
     ws.removeEventListener("message", handleMessage);
   }
 
-  function send(message) {
-    ws.send(message);
+  function sendMessage(message) {
+    ws.send(JSON.stringify(message));
   }
 
   function onReceive(cb) {
     messageCallback = cb;
   }
 
-  return { cleanUp, send, onReceive };
+  return { cleanUp, sendMessage, onReceive };
 }
 
 const SERVER_ENDPOINT = "ws://localhost:8081";

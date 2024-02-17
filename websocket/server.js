@@ -1,9 +1,35 @@
 const { Server } = require("ws");
 
 function createMessageHandler(connection) {
-  function messageHandler(message) {
-    const response = `We received: ${message}`;
-    connection.send(response);
+  async function sendResponse(message) {
+    const typingEvent = JSON.stringify({
+      type: "typing",
+      sender: "Bot",
+      timestamp: Date.now(),
+    });
+    connection.send(typingEvent);
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+    const messageEvent = JSON.stringify({
+      type: "message",
+      sender: "Bot",
+      data: `Responding to ${message.data}`,
+      timestamp: Date.now(),
+    });
+    connection.send(messageEvent);
+  }
+
+  function messageHandler(event) {
+    try {
+      const message = JSON.parse(event);
+
+      if (message.type === "message") {
+        sendResponse(message);
+      }
+    } catch (error) {
+      console.error("Message format is invalid");
+    }
   }
 
   return { messageHandler };
