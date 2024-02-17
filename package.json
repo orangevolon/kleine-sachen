@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start:snake": "live-server snake",
-    "start:line-and-dot": "live-server line-and-dot"
+    "start:line-and-dot": "live-server line-and-dot",
+    "start:websocket": "concurrently \"live-server websocket\" \"nodemon websocket/server.js\""
   },
   "keywords": [],
   "author": "",
