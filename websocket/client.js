@@ -3,18 +3,30 @@ function createChatForm(connection) {
   const inputText = document.getElementById("input-text");
   const responseText = document.getElementById("response-text");
 
+  function sendMessage() {
+    connection.send(inputText.value);
+    inputText.innerText = "";
+  }
+
   function handleReceive(message) {
     responseText.innerText = message;
   }
 
   function handleSubmit(event) {
     event.preventDefault();
-    connection.send(inputText.value);
-    inputText.innerText = "";
+    sendMessage();
+  }
+
+  function handleKeydown(event) {
+    if (event.key !== "Enter") return;
+    if (!event.metaKey) return;
+
+    sendMessage();
   }
 
   connection.onReceive(handleReceive);
   inputForm.addEventListener("submit", handleSubmit);
+  inputForm.addEventListener("keydown", handleKeydown);
 
   function cleanUp() {
     connection.onReceive = undefined;
