@@ -3,13 +3,23 @@ function createChatForm(connection) {
   const inputText = document.getElementById("input-text");
   const responseText = document.getElementById("response-text");
 
+  function addChatEntry(sender, message, direction) {
+    const entry = document.createElement("li");
+    entry.innerHTML = `<strong>${sender}:</strong> ${message}`;
+    entry.classList.add("chat-entry");
+    entry.classList.add(direction);
+
+    responseText.appendChild(entry);
+  }
+
   function sendMessage() {
-    connection.send(inputText.value);
-    inputText.innerText = "";
+    const message = inputText.value;
+    addChatEntry("Me", message, "send");
+    connection.send(message);
   }
 
   function handleReceive(message) {
-    responseText.innerText = message;
+    addChatEntry("Bot", message, "receive");
   }
 
   function handleSubmit(event) {
