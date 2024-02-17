@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Websockets</title>
+    <script src="client.js" defer></script>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Chat bot</h1>
+      <section class="connection-status">
+        <h2>Status: <span id="connection-status">Unknown</span></h2>
+        <p id="connection-error"></p>
+      </section>
+      <section class="chat-area">
+        <ul id="response-text"></ul>
+        <form id="input-form">
+          <label for="input-text">Message:</label>
+          <textarea
+            id="input-text"
+            placeholder="Enter you text here..."
+          ></textarea>
+          <button type="submit">Send</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
