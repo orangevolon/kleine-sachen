@@ -11,7 +11,12 @@ async function initSw() {
 async function createImages(root) {
   const baseUrl = "https://picsum.photos/";
   const size = 200;
-  const count = 64;
+  const count = 50;
+
+  function cleanUpImages() {
+    const imageContainer = document.querySelector(".image-container");
+    if (imageContainer) imageContainer.remove();
+  }
 
   function createImageContainer() {
     const container = document.createElement("section");
@@ -34,13 +39,30 @@ async function createImages(root) {
     for (let idx = 0; idx < count; idx++) createImage(container, idx);
   }
 
+  cleanUpImages();
   const container = createImageContainer();
   createImages(container);
+}
+
+function createControls(root) {
+  const controlsContainer = document.createElement("section");
+  controlsContainer.classList.add("control-container");
+  root.appendChild(controlsContainer);
+
+  const loadButton = document.createElement("button");
+  loadButton.innerText = "Load images";
+  controlsContainer.appendChild(loadButton);
+
+  function handleClick() {
+    createImages(root);
+  }
+
+  loadButton.addEventListener("click", handleClick);
 }
 
 (async function main() {
   await initSw();
 
   const root = document.getElementById("root");
-  createImages(root);
+  createControls(root);
 })();
