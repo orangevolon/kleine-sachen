@@ -6,7 +6,8 @@
   "scripts": {
     "start:snake": "live-server snake",
     "start:line-and-dot": "live-server line-and-dot",
-    "start:websocket": "yarn --cwd websocket start"
+    "start:websocket": "yarn --cwd websocket start",
+    "start:service-worker": "yarn --cwd service-worker start"
   },
   "keywords": [],
   "author": "",
