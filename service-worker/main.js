@@ -1,7 +1,6 @@
 async function initSw() {
   try {
-    const rg = await navigator.serviceWorker.register("/sw.js");
-    console.log("Browser: Service worker is registered successfully", rg);
+    await navigator.serviceWorker.register("/sw.js");
   } catch (error) {
     console.error(error);
     console.error("Could not register service worker");
@@ -11,7 +10,7 @@ async function initSw() {
 async function createImages(root) {
   const baseUrl = "https://picsum.photos/";
   const size = 200;
-  const count = 50;
+  const count = 10;
 
   function cleanUpImages() {
     const imageContainer = document.querySelector(".image-container");
@@ -44,6 +43,15 @@ async function createImages(root) {
   createImages(container);
 }
 
+function clearCache() {
+  try {
+    navigator.serviceWorker.controller.postMessage("clear-cache");
+  } catch (error) {
+    console.error("Could not clear the cache");
+    console.error(error);
+  }
+}
+
 function createControls(root) {
   const controlsContainer = document.createElement("section");
   controlsContainer.classList.add("control-container");
@@ -51,13 +59,15 @@ function createControls(root) {
 
   const loadButton = document.createElement("button");
   loadButton.innerText = "Load images";
+  loadButton.classList.add("primary");
+  loadButton.addEventListener("click", () => createImages(root));
+
+  const clearCacheButton = document.createElement("button");
+  clearCacheButton.innerText = "Clear cache";
+  clearCacheButton.addEventListener("click", clearCache);
+
   controlsContainer.appendChild(loadButton);
-
-  function handleClick() {
-    createImages(root);
-  }
-
-  loadButton.addEventListener("click", handleClick);
+  controlsContainer.appendChild(clearCacheButton);
 }
 
 (async function main() {

@@ -7,13 +7,12 @@ self.addEventListener("install", async (event) => {
 
 self.addEventListener("fetch", (event) => {
   async function tryCache() {
+    if (!event.request.url.match(IMAGE_PATTERN)) return fetch(event.request);
+
     const cache = await caches.open(imagesCache);
 
     const cacheResponse = await caches.match(event.request);
     if (cacheResponse) return cacheResponse;
-
-    if (!event.request.url.match(IMAGE_PATTERN))
-      return await fetch(event.request);
 
     const response = await fetch(event.request);
     cache.put(event.request, response.clone());
@@ -21,4 +20,10 @@ self.addEventListener("fetch", (event) => {
   }
 
   event.respondWith(tryCache());
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data === "clear-cache") {
+    caches.delete(imagesCache);
+  }
 });

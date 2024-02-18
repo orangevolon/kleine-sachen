@@ -25,9 +25,12 @@ button {
   border: none;
   border-radius: 0.5em;
   transition: filter 200ms ease;
+  cursor: pointer;
+}
+
+button.primary {
   background-color: lightcoral;
   color: white;
-  cursor: pointer;
 }
 
 button:hover {
@@ -38,6 +41,8 @@ button:hover {
   background-color: #fff;
   padding: 1em 2em;
   box-shadow: 1px 0 3px rgba(0, 0, 0, 0.2);
+  display: flex;
+  gap: 0.5em;
 }
 
 .image-container {
